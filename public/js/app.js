@@ -1653,6 +1653,41 @@ angular.module('cerebro').controller('RestController', ['$scope', '$http',
       $scope.loadHistory();
     };
 
+    var setWithExpiry = function(key, value, ttl) {
+      var now = new Date();
+
+      // `item` is an object which contains the original value
+      // as well as the time when it's supposed to expire
+      var item = {
+        value: value,
+        expiry: now.getTime() + ttl,
+      };
+      localStorage.setItem(key, JSON.stringify(item));
+    };
+
+    var getWithExpiry = function(key) {
+      var itemStr = localStorage.getItem(key);
+      // if the item doesn't exist, return null
+      if (!itemStr) {
+        return null;
+      }
+      var item = JSON.parse(itemStr);
+      var now = new Date();
+      // compare the expiry time of the item with the current time
+      if (now.getTime() > item.expiry) {
+        // If the item is expired, delete the item from storage
+        // and return null
+        localStorage.removeItem(key);
+        return null;
+      }
+      return item.value;
+    };
+
+    $scope.deleteFromLocalStorage = function(key) {
+      localStorage.removeItem(key);
+      AlertService.info('Indices Cache Successfully Cleared');
+    };
+
     var failure = function(response) {
       $scope.response = $sce.trustAsHtml(JSONTree.create(response));
     };
@@ -1703,9 +1738,14 @@ angular.module('cerebro').controller('RestController', ['$scope', '$http',
     };
 
     $scope.updateOptions = function(text) {
-      if ($scope.indices) {
+      var indices = getWithExpiry('indices');
+      if ($scope.indices && indices !== null) {
+        $scope.options = indices;
+      } else if ($scope.indices) {
         var autocomplete = new URLAutocomplete($scope.indices);
         $scope.options = autocomplete.getAlternatives(text);
+        // Store Indices with a 1 Month TTL
+        setWithExpiry('indices', $scope.options, 2629800000);
       }
     };
 
