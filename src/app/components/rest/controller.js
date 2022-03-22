@@ -106,7 +106,6 @@ angular.module('cerebro').controller('RestController', ['$scope', '$http',
 
     $scope.updateOptions = function(text) {
       var indices = getWithExpiry(localStorageKey);
-      console.log(indices);
       if ($scope.indices && indices !== null) {
         $scope.options = indices;
       } else if ($scope.indices) {
