@@ -13,6 +13,8 @@ angular.module('cerebro').controller('RestController', ['$scope', '$http',
     $scope.path = '';
     $scope.options = [];
 
+    var localStorageKey = 'indices';
+
     var success = function(response) {
       $scope.response = $sce.trustAsHtml(JSONTree.create(response));
       $scope.loadHistory();
@@ -48,8 +50,8 @@ angular.module('cerebro').controller('RestController', ['$scope', '$http',
       return item.value;
     };
 
-    $scope.deleteFromLocalStorage = function(key) {
-      localStorage.removeItem(key);
+    $scope.deleteFromLocalStorage = function() {
+      localStorage.removeItem(localStorageKey);
       AlertService.info('Indices Cache Successfully Cleared');
     };
 
@@ -103,14 +105,15 @@ angular.module('cerebro').controller('RestController', ['$scope', '$http',
     };
 
     $scope.updateOptions = function(text) {
-      var indices = getWithExpiry('indices');
+      var indices = getWithExpiry(localStorageKey);
+      console.log(indices);
       if ($scope.indices && indices !== null) {
         $scope.options = indices;
       } else if ($scope.indices) {
         var autocomplete = new URLAutocomplete($scope.indices);
         $scope.options = autocomplete.getAlternatives(text);
         // Store Indices with a 1 Month TTL
-        setWithExpiry('indices', $scope.options, 2629800000);
+        setWithExpiry(localStorageKey, $scope.options, 2629800000);
       }
     };
 
