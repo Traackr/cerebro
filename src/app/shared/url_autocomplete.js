@@ -72,13 +72,8 @@ function URLAutocomplete(indices) {
       return valid;
     };
 
-    var alternatives = [];
-
-    var addIfNotPresent = function(collection, element) {
-      if (collection.indexOf(element) === -1) {
-        collection.push(element);
-      }
-    };
+    // Use object for O(1) deduplication instead of O(n) indexOf
+    var alternativesSet = {};
 
     PATHS.forEach(function(suggestedPath) {
       var suggestedPathTokens = suggestedPath.split('/');
@@ -91,15 +86,15 @@ function URLAutocomplete(indices) {
         var suggestedToken = suggestedPathTokens[suggestedTokenIndex];
         if (suggestedToken === '{index}') {
           indices.forEach(function(index) {
-            addIfNotPresent(alternatives, format(pathTokens, index));
+            alternativesSet[format(pathTokens, index)] = true;
           });
         } else {
-          addIfNotPresent(alternatives, format(pathTokens, suggestedToken));
+          alternativesSet[format(pathTokens, suggestedToken)] = true;
         }
       }
     });
 
-    return alternatives.sort(function(a, b) {
+    return Object.keys(alternativesSet).sort(function(a, b) {
       return a.localeCompare(b);
     });
   };

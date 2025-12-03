@@ -1685,7 +1685,7 @@ angular.module('cerebro').controller('RestController', ['$scope', '$http',
       return item.value;
     };
 
-    $scope.deleteFromLocalStorage = function() {
+    $scope.clearCache = function() {
       localStorage.removeItem(localStorageKey);
       AlertService.info('Indices Cache Successfully Cleared');
     };
@@ -1740,14 +1740,17 @@ angular.module('cerebro').controller('RestController', ['$scope', '$http',
     };
 
     $scope.updateOptions = function(text) {
-      var indices = getWithExpiry(localStorageKey);
-      if ($scope.indices && indices !== null) {
-        $scope.options = indices;
-      } else if ($scope.indices) {
+      if (!$scope.indices) {
+        return; // Don't autocomplete if indices haven't loaded
+      }
+      var cached = getWithExpiry(localStorageKey);
+      if (cached !== null) {
+        $scope.options = cached;
+      } else {
         var autocomplete = new URLAutocomplete($scope.indices);
         $scope.options = autocomplete.getAlternatives(text);
-        // Store Indices with a 1 Month TTL
-        setWithExpiry(localStorageKey, $scope.options, 2629800000);
+        // Cache for 1 hour
+        setWithExpiry(localStorageKey, $scope.options, 3600000);
       }
     };
 
@@ -2743,13 +2746,8 @@ function URLAutocomplete(indices) {
       return valid;
     };
 
-    var alternatives = [];
-
-    var addIfNotPresent = function(collection, element) {
-      if (collection.indexOf(element) === -1) {
-        collection.push(element);
-      }
-    };
+    // Use object for O(1) deduplication instead of O(n) indexOf
+    var alternativesSet = {};
 
     PATHS.forEach(function(suggestedPath) {
       var suggestedPathTokens = suggestedPath.split('/');
@@ -2762,15 +2760,15 @@ function URLAutocomplete(indices) {
         var suggestedToken = suggestedPathTokens[suggestedTokenIndex];
         if (suggestedToken === '{index}') {
           indices.forEach(function(index) {
-            addIfNotPresent(alternatives, format(pathTokens, index));
+            alternativesSet[format(pathTokens, index)] = true;
           });
         } else {
-          addIfNotPresent(alternatives, format(pathTokens, suggestedToken));
+          alternativesSet[format(pathTokens, suggestedToken)] = true;
         }
       }
     });
 
-    return alternatives.sort(function(a, b) {
+    return Object.keys(alternativesSet).sort(function(a, b) {
       return a.localeCompare(b);
     });
   };

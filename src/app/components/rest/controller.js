@@ -50,7 +50,7 @@ angular.module('cerebro').controller('RestController', ['$scope', '$http',
       return item.value;
     };
 
-    $scope.deleteFromLocalStorage = function() {
+    $scope.clearCache = function() {
       localStorage.removeItem(localStorageKey);
       AlertService.info('Indices Cache Successfully Cleared');
     };
@@ -105,14 +105,17 @@ angular.module('cerebro').controller('RestController', ['$scope', '$http',
     };
 
     $scope.updateOptions = function(text) {
-      var indices = getWithExpiry(localStorageKey);
-      if ($scope.indices && indices !== null) {
-        $scope.options = indices;
-      } else if ($scope.indices) {
+      if (!$scope.indices) {
+        return; // Don't autocomplete if indices haven't loaded
+      }
+      var cached = getWithExpiry(localStorageKey);
+      if (cached !== null) {
+        $scope.options = cached;
+      } else {
         var autocomplete = new URLAutocomplete($scope.indices);
         $scope.options = autocomplete.getAlternatives(text);
-        // Store Indices with a 1 Month TTL
-        setWithExpiry(localStorageKey, $scope.options, 2629800000);
+        // Cache for 1 hour
+        setWithExpiry(localStorageKey, $scope.options, 3600000);
       }
     };
 

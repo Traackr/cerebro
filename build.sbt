@@ -36,7 +36,9 @@ lazy val root = (project in file(".")).
   enablePlugins(PlayScala, BuildInfoPlugin, LauncherJarPlugin, JDebPackaging, RpmPlugin).
   settings(
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
-    buildInfoPackage := "models"
+    buildInfoPackage := "models",
+    // Use polling file watcher to avoid JNA issues on Apple Silicon
+    PlayKeys.fileWatchService := play.dev.filewatch.FileWatchService.polling(500)
   )
 
 sources in (Compile, doc) := Seq.empty
