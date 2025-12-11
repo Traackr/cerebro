@@ -7,7 +7,7 @@ packageSummary := "Elasticsearch web admin tool"
 packageDescription := """cerebro is an open source(MIT License) elasticsearch web admin tool built
   using Scala, Play Framework, AngularJS and Bootstrap."""
 
-version := "0.9.6"
+version := "0.9.7"
 
 scalaVersion := "2.13.4"
 
