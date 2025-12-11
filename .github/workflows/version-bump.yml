@@ -1,4 +1,4 @@
-name: Version Bump
+name: version-bump
 
 on:
   release:
