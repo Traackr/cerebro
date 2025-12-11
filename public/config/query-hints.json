@@ -1,0 +1,179 @@
+{
+  "sections": [
+    {
+      "name": "Books",
+      "hints": [
+        {
+          "key": "all_books",
+          "label": "All Books",
+          "query": {
+            "query": {
+              "bool": {
+                "filter": [
+                  { "term": { "type": "BOOK" } }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "key": "book_by_isbn",
+          "label": "By ISBN",
+          "query": {
+            "query": {
+              "bool": {
+                "filter": [
+                  { "terms": { "book.isbn": ["978-0-13-468599-1", "978-0-596-51774-8"] } }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "key": "book_by_title",
+          "label": "By Title",
+          "query": {
+            "query": {
+              "bool": {
+                "filter": [
+                  { "match": { "book.title": "Elasticsearch Guide" } }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "key": "book_by_genre",
+          "label": "By Genre",
+          "query": {
+            "query": {
+              "bool": {
+                "filter": [
+                  { "terms": { "book.genre": ["fiction", "non-fiction", "technical"] } }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "key": "book_by_date",
+          "label": "By Publish Date",
+          "query": {
+            "query": {
+              "bool": {
+                "filter": [
+                  { "range": { "book.publishDate": { "gte": "2020-01-01", "lte": "2024-12-31" } } }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authors",
+      "hints": [
+        {
+          "key": "all_authors",
+          "label": "All Authors",
+          "query": {
+            "query": {
+              "bool": {
+                "filter": [
+                  { "term": { "type": "AUTHOR" } }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "key": "author_by_name",
+          "label": "By Name",
+          "query": {
+            "query": {
+              "bool": {
+                "filter": [
+                  { "match": { "author.name": "John Doe" } }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "key": "author_by_country",
+          "label": "By Country",
+          "query": {
+            "query": {
+              "bool": {
+                "filter": [
+                  { "term": { "author.country": "US" } }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Complex Queries",
+      "hints": [
+        {
+          "key": "bool_must_should",
+          "label": "Bool (must + should)",
+          "query": {
+            "query": {
+              "bool": {
+                "filter": [
+                  { "term": { "type": "BOOK" } }
+                ],
+                "should": [
+                  { "term": { "book.featured": true } },
+                  { "range": { "book.rating": { "gte": 4.5 } } }
+                ],
+                "minimum_should_match": 1
+              }
+            }
+          }
+        },
+        {
+          "key": "bool_must_not",
+          "label": "Bool (must_not)",
+          "query": {
+            "query": {
+              "bool": {
+                "filter": [
+                  { "term": { "type": "BOOK" } }
+                ],
+                "must_not": [
+                  { "term": { "book.outOfPrint": true } }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "key": "aggregation",
+          "label": "Aggregation by Genre",
+          "query": {
+            "size": 0,
+            "query": {
+              "bool": {
+                "filter": [
+                  { "term": { "type": "BOOK" } }
+                ]
+              }
+            },
+            "aggs": {
+              "by_genre": {
+                "terms": { "field": "book.genre", "size": 10 },
+                "aggs": {
+                  "avg_rating": { "avg": { "field": "book.rating" } }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

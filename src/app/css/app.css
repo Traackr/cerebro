@@ -141,3 +141,27 @@ table.shard-map { table-layout: fixed; }
 }
 
 hr.header { margin-top: 0; }
+
+/* Query Hints Button */
+.btn-query-hints {
+    background-color: transparent;
+    border-color: #9F85FF;
+    color: #9F85FF;
+}
+.btn-query-hints:hover,
+.btn-query-hints:focus,
+.btn-query-hints:active {
+    background-color: transparent;
+    border-color: #8B6FE6;
+    color: #8B6FE6;
+}
+.btn-query-hints .caret {
+    margin-left: 4px;
+}
+.btn-group.dropup .dropdown-menu li a {
+    cursor: pointer;
+}
+.btn-group.dropup .dropdown-menu {
+    max-height: 400px;
+    overflow-y: auto;
+}
