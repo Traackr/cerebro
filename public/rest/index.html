@@ -82,6 +82,17 @@
             <i class="fa fa-align-left"></i> format
           </button>
         </div>
+        <div class="btn-group dropup" ng-show="queryHintsLoaded">
+          <button type="button" class="btn btn-query-hints dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="fa fa-lightbulb-o"></i> Query Hints <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-right">
+            <li ng-repeat-start="section in queryHintSections" class="dropdown-header">{{section.name}}</li>
+            <li ng-repeat-end ng-repeat="hint in section.hints">
+              <a ng-click="loadQueryHint(hint.query)">{{hint.label}}</a>
+            </li>
+          </ul>
+        </div>
         <div class="btn-group">
           <button type="submit" class="btn btn-success" ng-click="execute()">
             <i class="fa fa-bolt"></i> send
