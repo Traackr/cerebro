@@ -102,8 +102,8 @@ jobs:
       - name: Extract changelog for version
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          # Extract section between current version and next version header
-          CHANGELOG=$(awk "/^### v${VERSION}/,/^### /" CHANGES.md | sed '$d')
+          # Extract section from current version until next version header (### v)
+          CHANGELOG=$(awk "/^### v${VERSION}/{found=1; next} /^### v/{exit} found" CHANGES.md)
           if [ -z "$CHANGELOG" ]; then
             CHANGELOG="Release v${VERSION}"
           fi
