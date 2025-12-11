@@ -1,0 +1,71 @@
+name: Version Bump
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  bump_version:
+    name: Bump Version After Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Get released version
+        id: released
+        run: |
+          # Extract version from tag (remove 'v' prefix)
+          VERSION="${{ github.event.release.tag_name }}"
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Released version: $VERSION"
+
+      - name: Calculate next version
+        id: next
+        run: |
+          VERSION="${{ steps.released.outputs.version }}"
+          # Parse semver components
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          # Increment patch version
+          NEXT_PATCH=$((PATCH + 1))
+          NEXT_VERSION="${MAJOR}.${MINOR}.${NEXT_PATCH}"
+          echo "version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+          echo "Next version: $NEXT_VERSION"
+
+      - name: Update build.sbt
+        run: |
+          NEXT_VERSION="${{ steps.next.outputs.version }}"
+          sed -i "s/^version := \".*\"/version := \"${NEXT_VERSION}\"/" build.sbt
+          cat build.sbt | grep "^version"
+
+      - name: Update package.json
+        run: |
+          NEXT_VERSION="${{ steps.next.outputs.version }}"
+          sed -i "s/\"version\": \".*\"/\"version\": \"${NEXT_VERSION}\"/" package.json
+          cat package.json | grep '"version"'
+
+      - name: Add unreleased section to CHANGES.md
+        run: |
+          NEXT_VERSION="${{ steps.next.outputs.version }}"
+          # Add new unreleased section after the header
+          sed -i "/^Cerebro Releases$/a\\
+\\
+### v${NEXT_VERSION} - Unreleased\\
+\\
+#### Changes" CHANGES.md
+          head -20 CHANGES.md
+
+      - name: Commit and push
+        run: |
+          NEXT_VERSION="${{ steps.next.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add build.sbt package.json CHANGES.md
+          git commit -m "Bump version to ${NEXT_VERSION}"
+          git push

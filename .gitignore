@@ -23,3 +23,8 @@ server.pid
 activator-*.sbt
 node_modules
 cerebro.db
+
+# Generated frontend build artifacts
+public/css/
+public/js/
+public/fonts/
