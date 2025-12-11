@@ -1,4 +1,5 @@
 {
+  "defaultPath": "bookstore/_search",
   "sections": [
     {
       "name": "Books",

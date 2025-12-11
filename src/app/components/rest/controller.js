@@ -16,6 +16,7 @@ angular.module('cerebro').controller('RestController', ['$scope', '$http',
     // Query hints loaded from external file
     $scope.queryHintSections = [];
     $scope.queryHintsLoaded = false;
+    $scope.queryHintsDefaultPath = '_search';
 
     // Load query hints from external JSON file
     $http.get('config/query-hints.json').then(
@@ -23,6 +24,9 @@ angular.module('cerebro').controller('RestController', ['$scope', '$http',
           if (response.data && response.data.sections) {
             $scope.queryHintSections = response.data.sections;
             $scope.queryHintsLoaded = true;
+            if (response.data.defaultPath) {
+              $scope.queryHintsDefaultPath = response.data.defaultPath;
+            }
           }
         },
         function(error) {
@@ -36,7 +40,7 @@ angular.module('cerebro').controller('RestController', ['$scope', '$http',
         $scope.editor.setValue(JSON.stringify(query, null, 2));
         $scope.method = 'POST';
         if (!$scope.path) {
-          $scope.path = '_search';
+          $scope.path = $scope.queryHintsDefaultPath;
         }
         AlertService.info('Query hint loaded');
       }
