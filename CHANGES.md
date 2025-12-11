@@ -1,6 +1,13 @@
 Cerebro Releases
 ------------
 
+### v0.9.5
+
+#### Changes
+- Add GitHub Actions CI workflow with automated draft releases
+- Add version bump workflow triggered on release publish
+- Remove committed frontend build artifacts (now generated during CI)
+
 ### v0.1.0 - July 14th, 2016
 
 First cerebro release.
