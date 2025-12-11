@@ -54,11 +54,7 @@ jobs:
         run: |
           NEXT_VERSION="${{ steps.next.outputs.version }}"
           # Add new unreleased section after the header
-          sed -i "/^Cerebro Releases$/a\\
-\\
-### v${NEXT_VERSION} - Unreleased\\
-\\
-#### Changes" CHANGES.md
+          sed -i "/^Cerebro Releases$/a\\\n\n### v${NEXT_VERSION} - Unreleased\n\n#### Changes" CHANGES.md
           head -20 CHANGES.md
 
       - name: Commit and push
