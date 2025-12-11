@@ -1,0 +1,121 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Frontend build
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '16'
+          cache: 'npm'
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build and test frontend
+        run: npx grunt build
+
+      # Backend build
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: 'sbt'
+
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
+
+      - name: Run backend tests
+        run: sbt test
+
+      - name: Build universal package
+        run: sbt universal:packageBin
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cerebro-universal
+          path: target/universal/cerebro-*.zip
+          retention-days: 7
+
+  release_draft:
+    name: Create Draft Release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version from build.sbt
+        id: version
+        run: |
+          VERSION=$(grep -E '^version := ' build.sbt | sed 's/version := "\(.*\)"/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: cerebro-universal
+          path: ./artifacts
+
+      - name: Generate checksums
+        run: |
+          cd ./artifacts
+          for file in cerebro-*.zip; do
+            sha256sum "$file" > "${file}.sha256"
+          done
+
+      - name: Remove existing draft releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release list --json tagName,isDraft --jq '.[] | select(.isDraft) | .tagName' | while read -r tag; do
+            echo "Deleting draft release: $tag"
+            gh release delete "$tag" --yes || true
+          done
+
+      - name: Extract changelog for version
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          CHANGELOG=$(awk "/^### v${VERSION}/,/^### v[0-9]/" CHANGES.md | head -n -1)
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="Release v${VERSION}"
+          fi
+          echo "$CHANGELOG" > release_notes.md
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          gh release create "v${VERSION}" \
+            --draft \
+            --title "v${VERSION}" \
+            --notes-file release_notes.md \
+            ./artifacts/cerebro-*.zip \
+            ./artifacts/*.sha256
