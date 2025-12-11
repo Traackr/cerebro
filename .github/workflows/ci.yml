@@ -102,11 +102,14 @@ jobs:
       - name: Extract changelog for version
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          CHANGELOG=$(awk "/^### v${VERSION}/,/^### v[0-9]/" CHANGES.md | head -n -1)
+          # Extract section between current version and next version header
+          CHANGELOG=$(awk "/^### v${VERSION}/,/^### /" CHANGES.md | sed '$d')
           if [ -z "$CHANGELOG" ]; then
             CHANGELOG="Release v${VERSION}"
           fi
           echo "$CHANGELOG" > release_notes.md
+          echo "--- Release notes ---"
+          cat release_notes.md
 
       - name: Create draft release
         env:
