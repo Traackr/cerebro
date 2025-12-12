@@ -18,8 +18,8 @@ angular.module('cerebro').controller('RestController', ['$scope', '$http',
     $scope.queryHintsLoaded = false;
     $scope.queryHintsDefaultPath = '_search';
 
-    // Load query hints from external JSON file
-    $http.get('config/query-hints.json').then(
+    // Load query hints - tries filesystem first, falls back to bundled
+    $http.get('rest/query-hints').then(
         function(response) {
           if (response.data && response.data.sections) {
             $scope.queryHintSections = response.data.sections;

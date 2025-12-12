@@ -9,6 +9,7 @@ POST        /aliases/update_aliases                   controllers.AliasesControl
 POST        /rest/history                             controllers.RestController.history
 POST        /rest/request                             controllers.RestController.request
 POST        /rest                                     controllers.RestController.index
+GET         /rest/query-hints                         controllers.QueryHintsController.get
 
 # Overview module
 POST        /overview                                 controllers.ClusterOverviewController.index
